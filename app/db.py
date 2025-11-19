@@ -10,10 +10,5 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-class TestTable(Base):
-    __tablename__ = "test_table"
-
-    id = Column(Integer, primary_key=True, index=True)
-    message = Column(String, index=True)
-
+from app.models import Product
 Base.metadata.create_all(bind=engine)
