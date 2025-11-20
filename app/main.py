@@ -10,6 +10,9 @@ from app.scraper import scrape_price
 from fastapi import HTTPException
 from app.models import PriceHistory
 from apscheduler.schedulers.background import BackgroundScheduler
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
 
@@ -66,21 +69,63 @@ def price_history(id: int, db: Session = Depends(get_db)):
         for h in history
     ]
 
-def scheduled_price_check():
-    db = SessionLocal()
-    products=db.query(Product).all()
-    for product in products:
-        price = scrape_price(product.url)
-        if price is None:
-            continue
-        history = PriceHistory(product_id=product.id, price=price)
-        db.add(history)
-        db.commit()
 
-    db.close()
+def scheduled_price_check():
+    logger.info("Starting scheduled price check...")
+
+    db = SessionLocal()
+
+    try:
+        products = db.query(Product).all()
+
+        for product in products:
+            try:
+                price = scrape_price(product.url)
+
+                if price is None:
+                    logger.warning(f"No price found for product ID {product.id}")
+                    continue
+
+                history = PriceHistory(
+                    product_id=product.id,
+                    price=price
+                )
+                db.add(history)
+                db.commit()
+
+                logger.info(f"Saved price {price} for product ID {product.id}")
+
+            except Exception as e:
+                logger.error(f"Error while processing product {product.id}: {e}")
+
+    except Exception as e:
+        logger.error(f"Error during main scheduler loop: {e}")
+
+    finally:
+        db.close()
+        logger.info("Scheduled price check finished.")
 
 
 @app.on_event("startup")
 def start_scheduler():
-    scheduler.add_job(scheduled_price_check, "interval", minutes=60)
+    logger.info("Starting APScheduler...")
+    scheduler.add_job(
+        scheduled_price_check,
+        "interval",
+        minutes=60,   # potem zmienimy na 1h
+        id="price_checker",
+        replace_existing=True
+    )
     scheduler.start()
+    logger.info("APScheduler started.")
+
+@app.on_event("shutdown")
+def shutdown_scheduler():
+    logger.info("Shutting down APScheduler...")
+    scheduler.shutdown()
+    logger.info("APScheduler shut down.")
+
+@app.get("/run-scheduler-once")
+def run_scheduler_once():
+    scheduled_price_check()
+    return {"status": "manual scheduler run complete"}

@@ -5,7 +5,9 @@ import re
 def scrape_price(url: str)-> float | None:
     html=requests.get(url).text
     soup=BeautifulSoup(html,"html.parser")
-    price=soup.find("span",class_="money")
+    #price=soup.find("span",class_="money") #enrage
+    price = soup.find("span", attrs={"data-qa-anchor": "productItemPrice"}) #bershka
+
     if price is None:
         return None
     price_txt=price.text
