@@ -1,14 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
-import os
+from app.database import Base, engine
+from app.models import Product, PriceHistory
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-from app.models import Product
 Base.metadata.create_all(bind=engine)
