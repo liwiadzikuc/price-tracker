@@ -9,6 +9,7 @@ from app.crud import create_product, get_products
 from app.scraper import scrape_price
 from fastapi import HTTPException
 from app.models import PriceHistory
+from app.models import PriceAlert
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +50,11 @@ def check_price(id: int, db: Session = Depends(get_db)):
     price = scrape_price(product.url)
     if price is None:
         raise HTTPException(status_code=400, detail="Cannot extract price from page")
+    if price<= product.target_price:
+        alert=PriceAlert(product_id=id,price=price)
+        db.add(alert)
+        db.commit()
+        logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
     history_entry = PriceHistory(
         product_id=id,
         price=price
@@ -72,9 +78,7 @@ def price_history(id: int, db: Session = Depends(get_db)):
 
 def scheduled_price_check():
     logger.info("Starting scheduled price check...")
-
     db = SessionLocal()
-
     try:
         products = db.query(Product).all()
 
@@ -92,6 +96,11 @@ def scheduled_price_check():
                 )
                 db.add(history)
                 db.commit()
+                if price <= product.target_price:
+                    alert = PriceAlert(product_id=product.id, price=price)
+                    db.add(alert)
+                    db.commit()
+                    logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
 
                 logger.info(f"Saved price {price} for product ID {product.id}")
 
@@ -112,7 +121,7 @@ def start_scheduler():
     scheduler.add_job(
         scheduled_price_check,
         "interval",
-        minutes=60,   # potem zmienimy na 1h
+        minutes=60,
         id="price_checker",
         replace_existing=True
     )
@@ -129,3 +138,15 @@ def shutdown_scheduler():
 def run_scheduler_once():
     scheduled_price_check()
     return {"status": "manual scheduler run complete"}
+
+@app.get("/products/{id}/alerts")
+def product_alerts(id: int, db: Session = Depends(get_db)):
+    alerts = db.query(PriceAlert).filter(PriceAlert.product_id == id).all()
+    return [
+        {
+            "id": a.id,
+            "price": a.price,
+            "created_at": a.created_at
+        }
+        for a in alerts
+    ]

@@ -20,3 +20,11 @@ class PriceHistory(Base):
     checked_at = Column(DateTime(timezone=True), server_default=func.now())
 
     product = relationship("Product")
+
+class PriceAlert(Base):
+    __tablename__="price_alerts"
+    id=Column(Integer,primary_key=True,index=True)
+    product_id=Column(Integer, ForeignKey("products.id"))
+    price=Column(Float, nullable=False)
+    created_at=Column(DateTime(timezone=True), server_default=func.now())
+    product=relationship("Product")
