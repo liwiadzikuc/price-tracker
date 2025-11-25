@@ -1,17 +1,19 @@
-from fastapi import FastAPI, Depends
+# app/main.py
+
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+import logging
+
 import app.db
 
 from app.database import SessionLocal
-from app.models import Product
+from app.models import Product, PriceHistory, PriceAlert
 from app.schemas import ProductCreate, ProductRead
 from app.crud import create_product, get_products
-from app.scraper import scrape_price
-from fastapi import HTTPException
-from app.models import PriceHistory
-from app.models import PriceAlert
+from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
-import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -19,12 +21,24 @@ scheduler = BackgroundScheduler()
 
 app = FastAPI()
 
+#cors - frontend gada z api
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 @app.get("/")
 def root():
@@ -42,31 +56,39 @@ def list_products(db: Session = Depends(get_db)):
     products = get_products(db)
     return products
 
+
 @app.get("/products/{id}/check-price")
-def check_price(id: int, db: Session = Depends(get_db)):
-    product=db.query(Product).filter(Product.id==id).first()
+async def check_price(id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == id).first()
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-    price = scrape_price(product.url)
+
+    price = await scrape_price_async(product.url)
+
     if price is None:
         raise HTTPException(status_code=400, detail="Cannot extract price from page")
-    if price<= product.target_price:
-        alert=PriceAlert(product_id=id,price=price)
+
+    if price <= product.target_price:
+        alert = PriceAlert(product_id=id, price=price)
         db.add(alert)
         db.commit()
         logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
+
     history_entry = PriceHistory(
         product_id=id,
         price=price
     )
     db.add(history_entry)
     db.commit()
+
     return {
         "product_id": id,
         "name": product.name,
         "url": product.url,
         "current_price": price
     }
+
+
 @app.get("/products/{id}/history")
 def price_history(id: int, db: Session = Depends(get_db)):
     history = db.query(PriceHistory).filter(PriceHistory.product_id == id).all()
@@ -76,6 +98,7 @@ def price_history(id: int, db: Session = Depends(get_db)):
     ]
 
 
+# schedulert
 def scheduled_price_check():
     logger.info("Starting scheduled price check...")
     db = SessionLocal()
@@ -84,7 +107,7 @@ def scheduled_price_check():
 
         for product in products:
             try:
-                price = scrape_price(product.url)
+                price = scrape_price(product.url)  # sync wrapper
 
                 if price is None:
                     logger.warning(f"No price found for product ID {product.id}")
@@ -96,6 +119,7 @@ def scheduled_price_check():
                 )
                 db.add(history)
                 db.commit()
+
                 if price <= product.target_price:
                     alert = PriceAlert(product_id=product.id, price=price)
                     db.add(alert)
@@ -128,16 +152,19 @@ def start_scheduler():
     scheduler.start()
     logger.info("APScheduler started.")
 
+
 @app.on_event("shutdown")
 def shutdown_scheduler():
     logger.info("Shutting down APScheduler...")
     scheduler.shutdown()
     logger.info("APScheduler shut down.")
 
+
 @app.get("/run-scheduler-once")
 def run_scheduler_once():
     scheduled_price_check()
     return {"status": "manual scheduler run complete"}
+
 
 @app.get("/products/{id}/alerts")
 def product_alerts(id: int, db: Session = Depends(get_db)):
