@@ -1,0 +1,40 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #fafafa;
+}
+
+h1 { text-align: center; }
+
+section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+
+input, button {
+    padding: 8px;
+    margin: 5px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}

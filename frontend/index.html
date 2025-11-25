@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Price Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Price Tracker – Panel</h1>
+
+<section id="add-product">
+    <h2>Dodaj produkt</h2>
+    <form id="productForm">
+        <input type="text" id="name" placeholder="Nazwa produktu" required>
+        <input type="text" id="url" placeholder="URL produktu" required>
+        <input type="number" id="target_price" placeholder="Cena docelowa" step="0.01" required>
+        <button type="submit">Dodaj</button>
+    </form>
+</section>
+
+<section id="product-list">
+    <h2>Lista produktów</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nazwa</th>
+                <th>Cena docelowa</th>
+                <th>URL</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody id="productsTable"></tbody>
+    </table>
+</section>
+
+<section id="history-section" class="hidden">
+    <h2>Historia cen</h2>
+    <ul id="history"></ul>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
