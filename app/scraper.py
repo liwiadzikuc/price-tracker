@@ -19,11 +19,40 @@ async def scrape_raw_html(url: str) -> str | None:
         print("HTTPX ERROR:", e)
         return None
 
+PRICE_KEYWORDS = [
+    "price",
+    "final-price",
+    "sale",
+    "sale-price",
+    "discount",
+    "discounted",
+    "deal",
+    "promo",
+    "promotion",
+    "old-price",
+    "regular-price",
+    "retail",
+    "current-price",
+    "low-price",
+    "best-price",
+    "value",
+    "amount",
+    "cost",
+    "cena",
+    "promocja",
+]
 
 def extract_price_fragments(html: str) -> str:
     if not html:
         return ""
-    fragment = "\n".join([line for line in html.splitlines() if "price" in line.lower()])
+    html_lower = html.lower()
+    lines = html_lower.splitlines()
+    matched = []
+    for line in lines:
+        if any(keyword in line for keyword in PRICE_KEYWORDS):
+            matched.append(line.strip())
+    fragment = "\n".join(matched)
+    #fragment = "\n".join([line for line in html.splitlines() if "price" in line.lower()])
     return fragment[:5000]
 
 
@@ -32,7 +61,8 @@ def scrape_price_ai(fragment: str) -> float | None:
         return None
 
     try:
-        client = OpenAI(api_key=API_KEY)
+        client = client = OpenAI()
+
 
         prompt = (
             "Extract the price from the following HTML snippet. "
@@ -40,18 +70,17 @@ def scrape_price_ai(fragment: str) -> float | None:
             f"{fragment}"
         )
 
-        result = client.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=10
+            max_tokens=15
         )
 
-        price_text = result.choices[0].message["content"]
-        if price_text:
-            price_text = price_text.strip().replace(",", ".")
-            match = re.search(r"\d{2,4}[.]\d{2}", price_text)
-            if match:
-                return float(match.group(0))
+        content = response.choices[0].message.content
+        content = content.replace(",", ".")
+        match = re.search(r"\d{2,4}\.\d{2}", content)
+        if match:
+            return float(match.group(0))
 
         return None
 
