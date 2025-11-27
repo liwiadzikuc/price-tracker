@@ -13,6 +13,7 @@ from app.schemas import ProductCreate, ProductRead, ProductUpdate
 from app.crud import create_product, get_products, update_product, delete_product
 from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
+from app.mailer import send_price_alert_email
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -87,7 +88,12 @@ async def check_price(id: int, db: Session = Depends(get_db)):
     if price <= product.target_price:
         alert = PriceAlert(product_id=id, price=price)
         db.add(alert)
-        db.commit()
+        send_price_alert_email(
+            product_name=product.name,
+            price=price,
+            target_price=product.target_price,
+            product_url=product.url
+        )
         logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
 
     history_entry = PriceHistory(
@@ -139,7 +145,12 @@ def scheduled_price_check():
                 if price <= product.target_price:
                     alert = PriceAlert(product_id=product.id, price=price)
                     db.add(alert)
-                    db.commit()
+                    send_price_alert_email(
+                        product_name=product.name,
+                        price=price,
+                        target_price=product.target_price,
+                        product_url=product.url
+                    )
                     logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
 
                 logger.info(f"Saved price {price} for product ID {product.id}")
