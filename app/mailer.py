@@ -12,11 +12,11 @@ SMTP_SERVER = os.getenv("SMTP_SERVER")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO")
+#ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO")
 
 
-def send_price_alert_email(product_name: str, price: float, target_price: float, product_url: str):
-    if not all([SMTP_SERVER, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO]):
+def send_price_alert_email(recipient_email: str,product_name: str, price: float, target_price: float, product_url: str):
+    if not all([SMTP_SERVER, SMTP_USER, SMTP_PASSWORD]):
         logger.error("Brak pełnej konfiguracji SMTP. Nie można wysłać e-maila.")
         return
 
@@ -36,7 +36,7 @@ def send_price_alert_email(product_name: str, price: float, target_price: float,
 
     msg = MIMEMultipart()
     msg['From'] = SMTP_USER
-    msg['To'] = ALERT_EMAIL_TO
+    msg['To'] = recipient_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -44,7 +44,7 @@ def send_price_alert_email(product_name: str, price: float, target_price: float,
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls() 
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, ALERT_EMAIL_TO, msg.as_string())
+            server.sendmail(SMTP_USER, recipient_email, msg.as_string())
         logger.info(f"Wysłano alert e-mail dla {product_name}")
         return True
     except Exception as e:

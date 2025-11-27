@@ -2,13 +2,23 @@ from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
+class UserBase(BaseModel):
+    email: str
+
+class UserCreate(UserBase):
+    pass
+
+class UserRead(UserBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
 class ProductBase(BaseModel):
     name: str
     url: str
     target_price: float
 
 class ProductCreate(ProductBase):
-    pass
+    user_id: int
 
 class ProductRead(ProductBase):
     id: int

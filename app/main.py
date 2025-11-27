@@ -1,5 +1,3 @@
-# app/main.py
-
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -9,8 +7,8 @@ import app.db
 
 from app.database import SessionLocal
 from app.models import Product, PriceHistory, PriceAlert
-from app.schemas import ProductCreate, ProductRead, ProductUpdate
-from app.crud import create_product, get_products, update_product, delete_product
+from app.schemas import ProductCreate, ProductRead, ProductUpdate, UserCreate, UserRead
+from app.crud import create_product, get_products, update_product, delete_product, create_user, get_user_by_id,get_user_email
 from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.mailer import send_price_alert_email
@@ -45,9 +43,22 @@ def get_db():
 def root():
     return {"status": "ok"}
 
+@app.post("/users", response_model=UserRead)
+def add_user(user_in: UserCreate, db: Session = Depends(get_db)):
+    #w przyszlosci logowanie/rejestracja, chwilowo user zawsze nowu
+    user = create_user(db, user_in)
+    return user
 
+@app.get("/users/{id}", response_model=UserRead)
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = get_user_by_id(db, id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 @app.post("/products", response_model=ProductRead)
 def add_product(product_in: ProductCreate, db: Session = Depends(get_db)):
+    if not get_user_by_id(db, product_in.user_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {product_in.user_id} not found")
     product = create_product(db, product_in)
     return product
 
@@ -88,12 +99,15 @@ async def check_price(id: int, db: Session = Depends(get_db)):
     if price <= product.target_price:
         alert = PriceAlert(product_id=id, price=price)
         db.add(alert)
-        send_price_alert_email(
-            product_name=product.name,
-            price=price,
-            target_price=product.target_price,
-            product_url=product.url
-        )
+        recipient_email = get_user_email(db, product.user_id)
+        if recipient_email:
+            send_price_alert_email(
+                recipient_email=recipient_email,
+                product_name=product.name,
+                price=price,
+                target_price=product.target_price,
+                product_url=product.url
+            )
         logger.info(f"ALERT! Price dropped for product {product.id}: {price}")
 
     history_entry = PriceHistory(
