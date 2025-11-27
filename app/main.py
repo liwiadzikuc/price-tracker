@@ -9,8 +9,8 @@ import app.db
 
 from app.database import SessionLocal
 from app.models import Product, PriceHistory, PriceAlert
-from app.schemas import ProductCreate, ProductRead
-from app.crud import create_product, get_products
+from app.schemas import ProductCreate, ProductRead, ProductUpdate
+from app.crud import create_product, get_products, update_product, delete_product
 from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -56,6 +56,22 @@ def list_products(db: Session = Depends(get_db)):
     products = get_products(db)
     return products
 
+@app.put("/products/{id}", response_model=ProductRead) 
+def edit_product(id: int, product_in: ProductUpdate, db: Session = Depends(get_db)):
+    product = update_product(db, id, product_in)
+
+    if product is None:
+        raise HTTPException(status_code=404, detail=f"Product with ID {id} not found")
+
+    return product
+@app.delete("/products/{id}") 
+def remove_product(id: int, db: Session = Depends(get_db)):
+    result = delete_product(db, id)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Product with ID {id} not found")
+
+    return result
 
 @app.get("/products/{id}/check-price")
 async def check_price(id: int, db: Session = Depends(get_db)):
@@ -177,3 +193,4 @@ def product_alerts(id: int, db: Session = Depends(get_db)):
         }
         for a in alerts
     ]
+

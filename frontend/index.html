@@ -39,7 +39,24 @@
     <h2>Historia cen</h2>
     <ul id="history"></ul>
 </section>
+<section id="edit-modal" class="hidden">
+    <h2>Edytuj produkt</h2>
+    <form id="editForm">
+        <input type="hidden" id="edit-id"> 
+        
+        <label for="edit-name">Nazwa:</label>
+        <input type="text" id="edit-name" required>
 
+        <label for="edit-url">URL:</label>
+        <input type="text" id="edit-url" required>
+
+        <label for="edit-target_price">Cena docelowa:</label>
+        <input type="number" id="edit-target_price" step="0.01" required>
+        
+        <button type="submit">Zapisz zmiany</button>
+        <button type="button" onclick="closeEditModal()">Anuluj</button>
+    </form>
+</section>
 <script src="script.js"></script>
 </body>
 </html>

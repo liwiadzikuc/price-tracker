@@ -7,6 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         addProduct();
     });
+
+    const editForm = document.getElementById("editForm");
+    if (editForm) {
+        editForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            editProduct();
+        });
+    }
 });
 
 async function loadProducts() {
@@ -27,6 +35,8 @@ async function loadProducts() {
             <td>
                 <button onclick="checkPrice(${p.id})">Sprawdź cenę</button>
                 <button onclick="showHistory(${p.id})">Historia</button>
+                <button onclick="showEditModal(${p.id}, '${p.name}', '${p.url}', ${p.target_price})">Edytuj</button> 
+                <button onclick="deleteProduct(${p.id})">Usuń</button>
             </td>
         `;
 
@@ -84,3 +94,54 @@ async function showHistory(id) {
         list.appendChild(li);
     });
 }
+async function deleteProduct(id) {
+    if (!confirm("Czy na pewno chcesz usunąć ten produkt i całą jego historię cen?")) {
+        return;
+    }
+
+    const res = await fetch(`${API}/products/${id}`, {
+        method: "DELETE"
+    });
+
+    if (res.ok) {
+        alert("Produkt usunięty pomyślnie!");
+        loadProducts(); 
+    } else {
+        alert("Błąd przy usuwaniu produktu.");
+    }
+}
+
+
+function showEditModal(id, name, url, target_price) {
+    document.getElementById("edit-id").value = id;
+    document.getElementById("edit-name").value = name;
+    document.getElementById("edit-url").value = url;
+    document.getElementById("edit-target_price").value = target_price;
+    document.getElementById("edit-modal").classList.remove("hidden");
+}
+
+function closeEditModal() {
+    document.getElementById("edit-modal").classList.add("hidden");
+}
+
+async function editProduct() {
+    const id = document.getElementById("edit-id").value;
+    const name = document.getElementById("edit-name").value;
+    const url = document.getElementById("edit-url").value;
+    const target_price = parseFloat(document.getElementById("edit-target_price").value);
+
+    const res = await fetch(`${API}/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, url, target_price })
+    });
+
+    if (res.ok) {
+        alert("Produkt zaktualizowany!");
+        closeEditModal();
+        loadProducts(); 
+    } else {
+        alert("Błąd przy aktualizacji produktu.");
+    }
+}
+
