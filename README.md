@@ -23,7 +23,7 @@ Prosty, ale inteligentny system do monitorowania cen produktów z dowolnych stro
 
 1.  **Klonowanie i instalacja zależności:**
     ```bash
-    git clone [Twój adres repo]
+    git clone https://github.com/liwiadzikuc/price-tracker.git
     pip install -r requirements.txt
     ```
 
