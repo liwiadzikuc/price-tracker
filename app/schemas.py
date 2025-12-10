@@ -16,6 +16,10 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class VerifyCode(BaseModel):
+    email: str
+    code: str
+
 class ProductBase(BaseModel):
     name: str
     url: str

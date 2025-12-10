@@ -14,6 +14,30 @@ SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 #ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO")
 
+def send_verification_email(recipient_email: str, code: str):
+    subject = "Kod weryfikacyjny - Price Tracker"
+    body = f"""
+    Twój kod weryfikacyjny to: {code}
+
+    Wpisz go na stronie, aby aktywować konto.
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = SMTP_USER
+    msg['To'] = recipient_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, recipient_email, msg.as_string())
+        logger.info(f"Wysłano kod weryfikacyjny na {recipient_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Błąd wysyłania maila: {e}")
+        return False
 
 def send_price_alert_email(recipient_email: str,product_name: str, price: float, target_price: float, product_url: str):
     if not all([SMTP_SERVER, SMTP_USER, SMTP_PASSWORD]):

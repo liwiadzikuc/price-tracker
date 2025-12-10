@@ -18,6 +18,22 @@ def get_user_email(db: Session, user_id: int) -> str | None:
 def get_user_by_email(db, email: str):
     return db.query(User).filter(User.email == email).first()
 
+def set_verification_code(db: Session, user: User, code: str):
+    user.verification_code = code
+    db.commit()
+    db.refresh(user)
+
+def verify_user(db: Session, email: str, code: str):
+    user = db.query(User).filter(User.email == email).first()
+    if user and user.verification_code == code:
+        user.is_verified = True
+        user.verification_code = None
+        db.commit()
+        db.refresh(user)
+        return user
+    return None
+
+
 def create_product(db: Session, product_in: ProductCreate):
     product = Product(
         name=product_in.name,

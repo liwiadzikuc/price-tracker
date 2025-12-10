@@ -44,6 +44,8 @@ async function login() {
     if (res.ok) {
         localStorage.setItem("user_id", data.user_id);
         alert("Zalogowano!");
+        document.getElementById("login-email").value = "";
+        document.getElementById("login-password").value = "";
         updateUI();
         loadProducts(); 
     } else {
@@ -64,12 +66,39 @@ async function register() {
     const data = await res.json();
 
     if (res.ok) {
-        alert("Rejestracja udana! Możesz się teraz zalogować.");
+        alert("Rejestracja udana! Sprawdź maila i wpisz kod.");
+        document.getElementById("verify-email").value = email;
+        document.getElementById("reg-email").value = "";
+        document.getElementById("reg-password").value = "";
+        document.getElementById("not-logged-in").style.display = "none";
+        document.getElementById("verify").style.display = "block";
     } else {
         alert("Błąd rejestracji: " + data.detail);
     }
 }
 
+async function verifyCode() {
+    const email = document.getElementById("verify-email").value;
+    const code = document.getElementById("verify-code").value;
+
+    const res = await fetch(`${API}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert("Konto aktywowane! Możesz się zalogować.");
+        document.getElementById("verify-email").value = "";
+        document.getElementById("verify-code").value = "";
+        document.getElementById("verify").style.display = "none";
+        document.getElementById("login").style.display = "block";
+    } else {
+        alert("Błąd: " + data.detail);
+    }
+}
 
 async function loadProducts() {
     const user_id = localStorage.getItem("user_id");
@@ -105,6 +134,13 @@ async function loadProducts() {
 function logout() {
     localStorage.removeItem("user_id");
     alert("Wylogowano!");
+    document.getElementById("login-email").value = "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("reg-email").value = "";
+    document.getElementById("reg-password").value = "";
+    document.getElementById("verify-email").value = "";
+    document.getElementById("verify-code").value = "";
+
     updateUI();
 }
 

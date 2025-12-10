@@ -2,16 +2,16 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import logging
-
+from random import randint
 import app.db
 
 from app.database import SessionLocal
 from app.models import Product, PriceHistory, PriceAlert
-from app.schemas import ProductCreate, ProductRead, ProductUpdate, UserCreate, UserRead, UserLogin
-from app.crud import create_product, get_products, update_product, delete_product, create_user, get_user_by_id,get_user_email,get_user_by_email
+from app.schemas import ProductCreate, ProductRead, ProductUpdate, UserCreate, UserRead, UserLogin, VerifyCode
+from app.crud import create_product, get_products, update_product, delete_product, create_user, get_user_by_id,get_user_email,get_user_by_email,verify_user, set_verification_code
 from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.mailer import send_price_alert_email
+from app.mailer import send_price_alert_email, send_verification_email
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,18 +63,29 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user = create_user(db, user_in)
-    return {"user_id": user.id, "email": user.email}
+    code = str(randint(100000, 999999))
+    set_verification_code(db, user, code)
+    send_verification_email(user.email, code)
+    return {"message": "Rejestracja udana, sprawdź email i wpisz kod weryfikacyjny."}
 
 @app.post("/login")
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
     user = get_user_by_email(db, user_in.email)
-    if not user:
+    if not user or user.password != user_in.password:
         raise HTTPException(status_code=400, detail="Invalid email or password")
 
-    if user.password != user_in.password:
-        raise HTTPException(status_code=400, detail="Invalid email or password")
+    if not user.is_verified:
+        raise HTTPException(status_code=400, detail="Account not verified")
 
     return {"user_id": user.id, "email": user.email}
+
+@app.post("/verify")
+def verify(data: VerifyCode, db: Session = Depends(get_db)):
+    user = verify_user(db, data.email, data.code)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid code or email")
+
+    return {"message": "Konto zweryfikowane! Możesz się teraz zalogować."}
 
 @app.post("/products", response_model=ProductRead)
 def add_product(product_in: ProductCreate, db: Session = Depends(get_db)):
