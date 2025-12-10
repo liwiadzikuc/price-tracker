@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models import Product, User
 from app.schemas import ProductCreate, ProductUpdate, UserCreate
-
+import bcrypt
 def create_user(db: Session, user_in: UserCreate):
-    user = User(email=user_in.email, password=user_in.password)
+    hashed = bcrypt.hashpw(user_in.password.encode('utf-8'), bcrypt.gensalt())
+    user = User(email=user_in.email, password=hashed.decode('utf-8'))
     db.add(user)
     db.commit()
     db.refresh(user)

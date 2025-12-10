@@ -23,8 +23,10 @@ function updateUI() {
     if (user_id) {
         document.getElementById("logged-in").style.display = "block";
         document.getElementById("not-logged-in").style.display = "none";
+         document.getElementById("verify").style.display = "none";
     } else {
         document.getElementById("logged-in").style.display = "none";
+         document.getElementById("verify").style.display = "none";
         document.getElementById("not-logged-in").style.display = "block";
     }
 }
@@ -70,7 +72,7 @@ async function register() {
         document.getElementById("verify-email").value = email;
         document.getElementById("reg-email").value = "";
         document.getElementById("reg-password").value = "";
-        document.getElementById("not-logged-in").style.display = "none";
+        document.getElementById("login").style.display = "none";
         document.getElementById("verify").style.display = "block";
     } else {
         alert("Błąd rejestracji: " + data.detail);
@@ -93,8 +95,9 @@ async function verifyCode() {
         alert("Konto aktywowane! Możesz się zalogować.");
         document.getElementById("verify-email").value = "";
         document.getElementById("verify-code").value = "";
+        //document.getElementById("verify").style.display = "none";
+        document.getElementById("not-logged-in").style.display = "block";
         document.getElementById("verify").style.display = "none";
-        document.getElementById("login").style.display = "block";
     } else {
         alert("Błąd: " + data.detail);
     }

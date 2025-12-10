@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import logging
+import bcrypt
 from random import randint
 import app.db
 
@@ -71,12 +72,12 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
     user = get_user_by_email(db, user_in.email)
-    if not user or user.password != user_in.password:
+    if not user:
         raise HTTPException(status_code=400, detail="Invalid email or password")
-
+    if not bcrypt.checkpw(user_in.password.encode('utf-8'), user.password.encode('utf-8')):
+        raise HTTPException(status_code=400, detail="Invalid email or password")
     if not user.is_verified:
         raise HTTPException(status_code=400, detail="Account not verified")
-
     return {"user_id": user.id, "email": user.email}
 
 @app.post("/verify")

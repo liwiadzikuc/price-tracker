@@ -8,7 +8,7 @@
 <body>
 
 <h1>Price Tracker – Panel</h1>
-<section id="not-logged-in">
+<div id="not-logged-in">
 <section id="register">
     <h2>Rejestracja</h2>
     <input id="reg-email" placeholder="E-mail">
@@ -21,14 +21,14 @@
     <input id="login-password" type="password" placeholder="Hasło">
     <button onclick="login()">Zaloguj</button>
 </section>
-</section>
+</div>
 <section id="verify" class="hidden">
     <h2>Weryfikacja konta</h2>
     <input id="verify-email" placeholder="E-mail">
     <input id="verify-code" placeholder="Kod z e-maila">
     <button onclick="verifyCode()">Potwierdź</button>
 </section>
-<section id="logged-in">
+<div id="logged-in">
 <section id="add-product">
     <h2>Dodaj produkt</h2>
     <form id="productForm">
@@ -79,7 +79,7 @@
 </section>
 <button onclick="logout()">Wyloguj</button>
 
-</section>
+</div>
 <script src="script.js"></script>
 </body>
 </html>
