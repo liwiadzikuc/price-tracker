@@ -6,11 +6,15 @@ class UserBase(BaseModel):
     email: str
 
 class UserCreate(UserBase):
-    pass
+    password:str
 
 class UserRead(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 class ProductBase(BaseModel):
     name: str

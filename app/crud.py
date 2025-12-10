@@ -3,7 +3,7 @@ from app.models import Product, User
 from app.schemas import ProductCreate, ProductUpdate, UserCreate
 
 def create_user(db: Session, user_in: UserCreate):
-    user = User(email=user_in.email)
+    user = User(email=user_in.email, password=user_in.password)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -14,6 +14,9 @@ def get_user_by_id(db: Session, user_id: int):
     
 def get_user_email(db: Session, user_id: int) -> str | None:
     return db.query(User.email).filter(User.id == user_id).scalar()
+
+def get_user_by_email(db, email: str):
+    return db.query(User).filter(User.email == email).first()
 
 def create_product(db: Session, product_in: ProductCreate):
     product = Product(

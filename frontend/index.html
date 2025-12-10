@@ -8,7 +8,22 @@
 <body>
 
 <h1>Price Tracker – Panel</h1>
+<section id="not-logged-in">
+<section id="register">
+    <h2>Rejestracja</h2>
+    <input id="reg-email" placeholder="E-mail">
+    <input id="reg-password" type="password" placeholder="Hasło">
+    <button onclick="register()">Zarejestruj</button>
+</section>
 
+<section id="login">
+    <h2>Logowanie</h2>
+    <input id="login-email" placeholder="E-mail">
+    <input id="login-password" type="password" placeholder="Hasło">
+    <button onclick="login()">Zaloguj</button>
+</section>
+</section>
+<section id="logged-in">
 <section id="add-product">
     <h2>Dodaj produkt</h2>
     <form id="productForm">
@@ -56,6 +71,9 @@
         <button type="submit">Zapisz zmiany</button>
         <button type="button" onclick="closeEditModal()">Anuluj</button>
     </form>
+</section>
+<button onclick="logout()">Wyloguj</button>
+
 </section>
 <script src="script.js"></script>
 </body>

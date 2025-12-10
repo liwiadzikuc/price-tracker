@@ -7,8 +7,8 @@ import app.db
 
 from app.database import SessionLocal
 from app.models import Product, PriceHistory, PriceAlert
-from app.schemas import ProductCreate, ProductRead, ProductUpdate, UserCreate, UserRead
-from app.crud import create_product, get_products, update_product, delete_product, create_user, get_user_by_id,get_user_email
+from app.schemas import ProductCreate, ProductRead, ProductUpdate, UserCreate, UserRead, UserLogin
+from app.crud import create_product, get_products, update_product, delete_product, create_user, get_user_by_id,get_user_email,get_user_by_email
 from app.scraper import scrape_price_async, scrape_price
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.mailer import send_price_alert_email
@@ -43,18 +43,39 @@ def get_db():
 def root():
     return {"status": "ok"}
 
-@app.post("/users", response_model=UserRead)
-def add_user(user_in: UserCreate, db: Session = Depends(get_db)):
-    #w przyszlosci logowanie/rejestracja, chwilowo user zawsze nowu
-    user = create_user(db, user_in)
-    return user
+# @app.post("/users", response_model=UserRead)
+# def add_user(user_in: UserCreate, db: Session = Depends(get_db)):
+#     #w przyszlosci logowanie/rejestracja, chwilowo user zawsze nowu
+#     user = create_user(db, user_in)
+#     return user
 
-@app.get("/users/{id}", response_model=UserRead)
-def get_user(id: int, db: Session = Depends(get_db)):
-    user = get_user_by_id(db, id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+# @app.get("/users/{id}", response_model=UserRead)
+# def get_user(id: int, db: Session = Depends(get_db)):
+#     user = get_user_by_id(db, id)
+#     if user is None:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return user
+
+@app.post("/register")
+def register(user_in: UserCreate, db: Session = Depends(get_db)):
+    existing = get_user_by_email(db, user_in.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = create_user(db, user_in)
+    return {"user_id": user.id, "email": user.email}
+
+@app.post("/login")
+def login(user_in: UserLogin, db: Session = Depends(get_db)):
+    user = get_user_by_email(db, user_in.email)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    if user.password != user_in.password:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    return {"user_id": user.id, "email": user.email}
+
 @app.post("/products", response_model=ProductRead)
 def add_product(product_in: ProductCreate, db: Session = Depends(get_db)):
     if not get_user_by_id(db, product_in.user_id):
@@ -63,10 +84,9 @@ def add_product(product_in: ProductCreate, db: Session = Depends(get_db)):
     return product
 
 
-@app.get("/products", response_model=list[ProductRead])
-def list_products(db: Session = Depends(get_db)):
-    products = get_products(db)
-    return products
+@app.get("/products/{user_id}", response_model=list[ProductRead])
+def list_products(user_id: int,db: Session = Depends(get_db)):
+    return db.query(Product).filter(Product.user_id == user_id).all()
 
 @app.put("/products/{id}", response_model=ProductRead) 
 def edit_product(id: int, product_in: ProductUpdate, db: Session = Depends(get_db)):

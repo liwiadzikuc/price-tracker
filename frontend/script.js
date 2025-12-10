@@ -1,6 +1,7 @@
 const API = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
+    updateUI();
     loadProducts();
 
     document.getElementById("productForm").addEventListener("submit", async (e) => {
@@ -16,9 +17,67 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+function updateUI() {
+    const user_id = localStorage.getItem("user_id");
+
+    if (user_id) {
+        document.getElementById("logged-in").style.display = "block";
+        document.getElementById("not-logged-in").style.display = "none";
+    } else {
+        document.getElementById("logged-in").style.display = "none";
+        document.getElementById("not-logged-in").style.display = "block";
+    }
+}
+
+async function login() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        localStorage.setItem("user_id", data.user_id);
+        alert("Zalogowano!");
+        updateUI();
+        loadProducts(); 
+    } else {
+        alert("Błędny login lub hasło");
+    }
+}
+
+async function register() {
+    const email = document.getElementById("reg-email").value;
+    const password = document.getElementById("reg-password").value;
+
+    const res = await fetch(`${API}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert("Rejestracja udana! Możesz się teraz zalogować.");
+    } else {
+        alert("Błąd rejestracji: " + data.detail);
+    }
+}
+
 
 async function loadProducts() {
-    const res = await fetch(`${API}/products`);
+    const user_id = localStorage.getItem("user_id");
+    if (!user_id) {
+        alert("Najpierw się zaloguj!");
+        return;
+    }
+    const res = await fetch(`${API}/products/${user_id}`);
     const products = await res.json();
 
     const table = document.getElementById("productsTable");
@@ -43,16 +102,26 @@ async function loadProducts() {
         table.appendChild(row);
     });
 }
+function logout() {
+    localStorage.removeItem("user_id");
+    alert("Wylogowano!");
+    updateUI();
+}
 
 async function addProduct() {
     const name = document.getElementById("name").value;
     const url = document.getElementById("url").value;
     const target_price = parseFloat(document.getElementById("target_price").value);
+    const user_id = parseInt(localStorage.getItem("user_id"));
+    if (!user_id) {
+    alert("Najpierw się zaloguj!");
+    return;
+    }
 
     const res = await fetch(`${API}/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, url, target_price })
+        body: JSON.stringify({ name, url, target_price, user_id })
     });
 
     if (res.ok) {
