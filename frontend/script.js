@@ -16,6 +16,21 @@ document.addEventListener("DOMContentLoaded", () => {
             editProduct();
         });
     }
+    document.getElementById("login-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        login();
+    });
+
+    document.getElementById("register-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        register();
+    });
+
+    document.getElementById("verify-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        verifyCode();
+    });
+
 });
 function updateUI() {
     const user_id = localStorage.getItem("user_id");

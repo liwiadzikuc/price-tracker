@@ -11,22 +11,28 @@
 <div id="not-logged-in">
 <section id="register">
     <h2>Rejestracja</h2>
-    <input id="reg-email" placeholder="E-mail">
-    <input id="reg-password" type="password" placeholder="Hasło">
-    <button onclick="register()">Zarejestruj</button>
+    <form id="register-form">
+        <input id="reg-email" placeholder="E-mail" required >
+        <input id="reg-password" type="password" placeholder="Hasło" required >
+        <button type="submit">Zarejestruj</button>
+    </form>
 </section>
 <section id="login">
     <h2>Logowanie</h2>
-    <input id="login-email" placeholder="E-mail">
-    <input id="login-password" type="password" placeholder="Hasło">
-    <button onclick="login()">Zaloguj</button>
+    <form id="login-form">
+        <input id="login-email" placeholder="E-mail">
+        <input id="login-password" type="password" placeholder="Hasło">
+        <button onclick="submit">Zaloguj</button>
+    </form>
 </section>
 </div>
 <section id="verify" class="hidden">
     <h2>Weryfikacja konta</h2>
-    <input id="verify-email" placeholder="E-mail">
-    <input id="verify-code" placeholder="Kod z e-maila">
-    <button onclick="verifyCode()">Potwierdź</button>
+    <form id="verify-form">
+        <input id="verify-email" placeholder="E-mail">
+        <input id="verify-code" placeholder="Kod z e-maila">
+        <button onclick="submit">Potwierdź</button>
+    </form>
 </section>
 <div id="logged-in">
 <section id="add-product">
