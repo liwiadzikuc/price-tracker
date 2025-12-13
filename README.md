@@ -1,45 +1,24 @@
-# 📈 Price Tracker API – System Monitorowania Cen
+# Price Tracker – system monitorowania cen
 
-## 🚀 Przegląd
-Prosty, ale inteligentny system do monitorowania cen produktów z dowolnych stron eCommerce. Aplikacja przechowuje historię cen w PostgreSQL i wysyła spersonalizowane alerty e-mail, gdy cena spadnie.
+## Opis projektu
+Price Tracker to aplikacja webowa do śledzenia cen produktów z wybranych stron internetowych.  
+Użytkownik może dodać produkt, ustawić cenę docelową i sprawdzać, jak cena zmienia się w czasie.  
+System zapisuje historię cen w bazie danych oraz wysyła powiadomienia e-mail, gdy cena spadnie poniżej ustalonego progu.
+
+Projekt składa się z backendu w Pythonie oraz prostego frontendu w HTML, CSS i JavaScript.
 
 ---
 
-## 🛠️ Architektura i Technologie
+## Architektura i technologie
 
-| Komponent | Technologia | Kluczowe Osiągnięcie |
+| Komponent | Technologia | Funkcja |
 | :--- | :--- | :--- |
-| **Backend** | **Python (FastAPI)** | Wdrożenie pełnego REST API (CRUD) dla Użytkowników i Produktów. |
-| **Baza Danych** | **PostgreSQL (SQLAlchemy)** | Modelowanie relacji 1:N (User:Product), kaskadowe usuwanie danych. |
-| **Scraping** | **Wielopoziomowy Scraper** | Strategia 3-fazowa: **HTTPX/Regex** ➡️ **OpenAI AI** ➡️ **Selenium** |
-| **Logika** | **APScheduler, SMTP** | Cykliczne sprawdzanie cen w tle i dynamiczna wysyłka alertów e-mail do właściciela produktu. |
-| **Frontend** | **Vanilla JS/HTML** | Prosty interfejs do demonstracji funkcjonalności API. |
+| **Backend** | **Python (FastAPI)** | REST API obsługujące użytkowników, produkty oraz historię cen (CRUD). |
+| **Baza danych** | **PostgreSQL + SQLAlchemy** | Relacyjny model danych (User → Product), przechowywanie cen i alertów. |
+| **Scraping cen** | **HTTPX / Regex / Selenium** | Pobieranie aktualnych cen produktów, także ze stron dynamicznych. |
+| **Logika aplikacji** | **APScheduler** | Okresowe sprawdzanie cen produktów w tle. |
+| **Powiadomienia** | **SMTP (e-mail)** | Wysyłanie e-maili, gdy cena osiągnie ustawiony próg. |
+| **Bezpieczeństwo** | **bcrypt** | Hashowanie haseł użytkowników przed zapisem w bazie. |
+| **Frontend** | **HTML / CSS / JavaScript** | Prosty interfejs użytkownika komunikujący się z API przez Fetch API. |
 
----
 
-## ⚡ Jak Uruchomić (Quick Start)
-
-**Wymagania:** Python 3.10+, PostgreSQL, Klucz OpenAI API, Dane SMTP.
-
-1.  **Klonowanie i instalacja zależności:**
-    ```bash
-    git clone https://github.com/liwiadzikuc/price-tracker.git
-    pip install -r requirements.txt
-    ```
-
-2.  **Konfiguracja:** Wypełnij plik **`.env`** danymi do PostgreSQL, OpenAI API oraz serwera SMTP.
-
-3.  **Inicjalizacja i Start:**
-    ```bash
-    python app/db.py
-    uvicorn app.main:app --reload
-    ```
-    * API i Swagger: `http://localhost:8000/docs`
-
----
-
-## ➡️ Następne Kroki
-
-* [ ] **Docker:** Pełna konteneryzacja środowiska (API + PostgreSQL + Chrome/Selenium).
-* [ ] **Waluty:** Implementacja konwersji walut.
-* [ ] **Uwierzytelnianie (JWT):** Dodanie tokenów bezpieczeństwa dla API.
